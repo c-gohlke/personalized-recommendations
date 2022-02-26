@@ -1,0 +1,8 @@
+/out
+*__pycache__
+/.vscode
+todo.md
+h-and-m-personalized-fashion-recommendations/
+test/
+.ipynb_checkpoints/
+.spyproject/
