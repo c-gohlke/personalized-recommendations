@@ -1,3 +1,9 @@
+## Setup
+
+conda create --name h-and-m --file conda-env.txt
+python -m utils.dataprocessor
+run python.ipynb
+
 ## Data exploration
 
 ### articles
@@ -32,33 +38,10 @@ Amount of transactions per product group name
 Amount of transactions per colour group
 Amount of transactions per product type name
 
-### Task
-
-predict 12 items to recommend for a given nuser, that can have past buying history or not.
-
-## Ideas
-
 ### test set
 
 transactions made in the last 7 days
 
-### Loss function
+### Task
 
-ratio of transactions bought in 12 recommendations made
-
-### Improvement Ideas
-
-cluster customers (F/M)
-
-customer gender prediction
-does more bra bought correlate with more future bras bought?
-same q for different product code/type name/group name etc.
-
-Customer can buy same article again
- -> find which articles customer is likely to buy again. If bought buy user U, recommend that again
-
- Never recommend unpopular items (in real life could be useful). Evaluation metric is not, what is the impact of the recommendation system? But, can I predict which item will be bought?
-
-## Approach
-
-1) separate most recent transactions to build test set
+predict 12 items to recommend for a given nuser, that can have past buying history or not.
