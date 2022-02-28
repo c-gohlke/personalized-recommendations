@@ -1,20 +1,24 @@
 import os
+import torch
 
 POSSIBLE_DATASETS = ["full", "only_test_customers", "only_test", "small"]
 DS = POSSIBLE_DATASETS[0]
 
-DEVICE = "cuda:0"
-# DEVICE = "cpu"
+if torch.cuda.is_available():
+    DEVICE = "cuda:0"
+else:
+    DEVICE = "cpu"
 
 BASE_PATH = "/home/clement/Desktop/projects/personalized-recommendations/"
 OG_DATA_NAME = "h-and-m-personalized-fashion-recommendations"
 OG_DATA_PATH = os.path.join(BASE_PATH, OG_DATA_NAME)
-OUT_PATH = os.path.join(BASE_PATH, "out", DS)
-PROCESSED_DATA_PATH = os.path.join(OUT_PATH, "data")
-PROCESSED_DATA_OUT_PATH = os.path.join(OUT_PATH, "data")
-FIGURES_PATH = os.path.join(OUT_PATH, "figures")
-MODEL_LOAD_PATH = os.path.join(OUT_PATH, "models")
-MODEL_SAVE_PATH = os.path.join(OUT_PATH, "models")
+OUT_PATH = os.path.join(BASE_PATH, "out")
+OUT_DS_PATH = os.path.join(OUT_PATH, DS)
+PROCESSED_DATA_PATH = os.path.join(OUT_DS_PATH, "data")
+PROCESSED_DATA_OUT_PATH = os.path.join(OUT_DS_PATH, "data")
+FIGURES_PATH = os.path.join(OUT_DS_PATH, "figures")
+MODEL_LOAD_PATH = os.path.join(OUT_DS_PATH, "models")
+MODEL_SAVE_PATH = os.path.join(OUT_DS_PATH, "models")
 
 PREDICT_AMOUNT = 12
 

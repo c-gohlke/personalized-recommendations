@@ -8,7 +8,6 @@ if __name__ == "__main__":
         print("CUDA Unavailable")
         run_params["device"] = "cpu"
 
-
     model = Model(run_params=run_params)
     model.load_model()
     model.train()

@@ -6,3 +6,4 @@ h-and-m-personalized-fashion-recommendations/
 test/
 .ipynb_checkpoints/
 .spyproject/
+params.py

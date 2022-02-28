@@ -11,6 +11,7 @@ from params import (
     PROCESSED_DATA_PATH,
     PROCESSED_DATA_OUT_PATH,
     OUT_PATH,
+    BASE_PATH,
 )
 
 
@@ -63,6 +64,10 @@ class DataProcessor:
             with open(os.path.join(og_data_path, "customers.csv")) as f:
                 customer_df = pd.read_csv(f)
                 if DS == "only_test" or DS == "only_test_customers":
+                    if not os.path.exists(
+                        os.path.join(OUT_PATH, "test_df_info.pickle")
+                    ):
+                        self.find_test_info()
                     with open(
                         os.path.join(OUT_PATH, "test_df_info.pickle"), "rb"
                     ) as handle:
@@ -150,6 +155,10 @@ class DataProcessor:
             with open(os.path.join(og_data_path, "articles.csv")) as f:
                 article_df = pd.read_csv(f)
                 if DS == "only_test":
+                    if not os.path.exists(
+                        os.path.join(OUT_PATH, "test_df_info.pickle")
+                    ):
+                        self.find_test_info()
                     with open(
                         os.path.join(OUT_PATH, "test_df_info.pickle"), "rb"
                     ) as handle:
@@ -213,6 +222,10 @@ class DataProcessor:
             with open(os.path.join(og_data_path, "transactions_train.csv")) as f:
                 self.transaction_df = pd.read_csv(f)
                 if DS == "only_test" or DS == "only_test_customers":
+                    if not os.path.exists(
+                        os.path.join(OUT_PATH, "test_df_info.pickle")
+                    ):
+                        self.find_test_info()
                     with open(
                         os.path.join(OUT_PATH, "test_df_info.pickle"), "rb"
                     ) as handle:
@@ -254,6 +267,43 @@ class DataProcessor:
         self.last_day = max(self.transaction_df["t_dat"])
         self.train_threshold = self.last_day - pd.Timedelta(days=7)
 
+    def find_test_info(self):
+        processed_data_path = os.path.join(BASE_PATH, "out", "full", "data")
+        processed_data_out_path = os.path.join(BASE_PATH, "out", "full", "data")
+
+        self.load_customer_df(
+            OG_DATA_PATH, processed_data_path, processed_data_out_path
+        )
+        self.load_article_df(OG_DATA_PATH, processed_data_path, processed_data_out_path)
+        self.load_transaction_df(
+            OG_DATA_PATH, processed_data_path, processed_data_out_path
+        )
+        self.get_test_df()
+
+        test_customer_ids = self.test_df["customer_id"].unique().tolist()
+        test_article_ids = self.test_df["article_id"].unique().tolist()
+
+        test_customer_ids = [
+            self.new_keys_to_old_customers[cid] for cid in test_customer_ids
+        ]
+        test_article_ids = [
+            self.new_keys_to_old_articles[aid] for aid in test_article_ids
+        ]
+        test_df_info = {
+            "customer_ids": test_customer_ids,
+            "article_ids": test_article_ids,
+        }
+
+        with open(os.path.join(OUT_PATH, "test_df_info.pickle"), "wb") as handle:
+            pickle.dump(test_df_info, handle, protocol=pickle.HIGHEST_PROTOCOL)
+
+        if not (
+            processed_data_path == PROCESSED_DATA_PATH
+            and processed_data_out_path == PROCESSED_DATA_OUT_PATH
+        ):
+            # reload necessary dataset
+            self.__init__()
+
     def get_train_df(self):
         self.train_df = self.transaction_df[
             self.transaction_df["t_dat"] < self.train_threshold
@@ -265,7 +315,7 @@ class DataProcessor:
         self.test_df = self.transaction_df[
             self.transaction_df["t_dat"] >= self.train_threshold
         ]
-        self.test_customer_ids = self.train_df["customer_id"].unique()
+        self.test_customer_ids = self.test_df["customer_id"].unique()
 
     def get_article_df(self):
         return self.article_df
@@ -382,7 +432,5 @@ class Dataset(torch.utils.data.Dataset):
 if __name__ == "__main__":
     # from params import OG_DATA_PATH, PROCESSED_DATA_PATH, PROCESSED_DATA_OUT_PATH
 
-    dataprocessor = DataProcessor(
-        OG_DATA_PATH, PROCESSED_DATA_PATH, PROCESSED_DATA_OUT_PATH
-    )
+    dataprocessor = DataProcessor()
     #%%
