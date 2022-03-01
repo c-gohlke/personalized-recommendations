@@ -8,13 +8,9 @@ from utils.dataset import Dataset
 class DataLoader:
     def __init__(self, data_path):
         self.data_path = data_path
-        self.load_customer_df()
-        self.load_article_df()
-        self.get_customer_article_count()
-        self.load_train_test()
-        self.load_S_data()
-        # self.load_train_df()
-        # self.load_test_df()
+        self.load_S_train()
+        self.get_test_gt()
+        self.load_meta_data()
 
     def load_customer_df(self):
         print("customer data fast load")
@@ -27,33 +23,16 @@ class DataLoader:
             self.article_df = pickle.load(handle)
 
     def load_train_test(self):
-        # TODO improve
-        import pandas as pd
+        with open(os.path.join(self.data_path, "train_df.pickle"), "rb") as handle:
+            self.train_df = pickle.load(handle)
 
-        with open(
-            os.path.join(self.data_path, "transaction_df.pickle"), "rb"
-        ) as handle:
-            self.transaction_df = pickle.load(handle)
-
-        self.last_day = max(self.transaction_df["t_dat"])
-        self.train_threshold = self.last_day - pd.Timedelta(days=7)
-        self.test_df = self.transaction_df[
-            self.transaction_df["t_dat"] >= self.train_threshold
-        ]
-
-        self.test_customer_ids = self.test_df["customer_id"].unique()
-
-        self.train_df = self.transaction_df[
-            self.transaction_df["t_dat"] < self.train_threshold
-        ]
-
-        self.train_customer_ids = self.train_df["customer_id"].unique()
+        with open(os.path.join(self.data_path, "test_df.pickle"), "rb") as handle:
+            self.test_df = pickle.load(handle)
 
     def get_test_df(self):
         self.test_df = self.transaction_df[
             self.transaction_df["t_dat"] >= self.train_threshold
         ]
-        self.test_customer_ids = self.test_df["customer_id"].unique()
 
     def load_train_df(self):
         print("transaction data fast load")
@@ -65,25 +44,41 @@ class DataLoader:
         with open(os.path.join(self.data_path, "test_df.pickle"), "rb") as handle:
             self.test_df = pickle.load(handle)
 
-    def get_customer_article_count(self):
+    def load_meta_data(self):
         print("calculating customer and article counts")
-        self.customer_ids = self.customer_df["customer_id"].unique()
-        self.article_ids = self.article_df["article_id"].unique()
-        self.customer_count = len(self.customer_ids)
-        self.article_count = len(self.article_ids)
 
-    def load_S_data(self):
+        with open(os.path.join(self.data_path, "customer_ids.pickle"), "rb") as handle:
+            self.customer_ids = pickle.load(handle)
+        with open(os.path.join(self.data_path, "article_ids.pickle"), "rb") as handle:
+            self.article_ids = pickle.load(handle)
+        with open(
+            os.path.join(self.data_path, "customer_count.pickle"), "rb"
+        ) as handle:
+            self.customer_count = pickle.load(handle)
+        with open(os.path.join(self.data_path, "article_count.pickle"), "rb") as handle:
+            self.article_count = pickle.load(handle)
+        with open(
+            os.path.join(self.data_path, "train_customer_ids.pickle"), "rb"
+        ) as handle:
+            self.train_customer_ids = pickle.load(handle)
+        with open(
+            os.path.join(self.data_path, "test_customer_ids.pickle"), "rb"
+        ) as handle:
+            self.test_customer_ids = pickle.load(handle)
+
+    def load_S_train(self):
         print("S_train fast load")
         with open(os.path.join(self.data_path, "S_train.pickle"), "rb") as handle:
             self.S_train = pickle.load(handle)
 
+    def load_S_test(self):
         print("S_test fast load")
         with open(os.path.join(self.data_path, "S_test.pickle"), "rb") as handle:
             self.S_test = pickle.load(handle)
 
-    def get_test_gts(self):
+    def get_test_gt(self):
         print("get_test_gt fast load")
-        with open(os.path.join(self.data_path, "test_gts.pickle"), "rb") as handle:
+        with open(os.path.join(self.data_path, "test_gt.pickle"), "rb") as handle:
             self.test_gts = pickle.load(handle)
 
     def get_new_loader(self, batch_size):

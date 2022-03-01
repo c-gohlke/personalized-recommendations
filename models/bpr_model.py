@@ -59,6 +59,7 @@ class BPR_Model:
             self.device = torch.device("cuda")
         else:
             self.device = torch.device("cpu")
+
         print(f"Device is {self.device}")
         self.dataloader = DataLoader(self.params["data_path"])
         self.net = NN_Model(
@@ -191,7 +192,7 @@ class BPR_Model:
                     )
 
                     test_history.append(test_score)
-                print(f"test_score is {test_score}")  # ":.10f}")
+                print(f"test_score is {test_score:.10f}")
 
                 if test_score > self.best_score:
                     self.best_score = test_score

@@ -13,8 +13,9 @@ class DataProcessor:
         self.process_article_df()
         self.process_transaction_df()
         self.get_customer_article_count()
-        self.get_test_gts()
+        self.process_test_gt()
         self.create_splits()
+        self.process_meta_data()
 
     def process_customer_df(self):
         print("generating customer data")
@@ -41,10 +42,10 @@ class DataProcessor:
 
             self.customer_df = customer_df.sort_values(by="customer_id")
             self.old_keys_to_new_customers = {
-                k: i for (i, k) in enumerate(self.customer_df["customer_id"].values)
-            }  # TODO check uniqueness
+                k: i for (i, k) in enumerate(self.customer_df["customer_id"].unique())
+            }
             self.new_keys_to_old_customers = {
-                i: c for (i, c) in enumerate(self.customer_df["customer_id"].values)
+                i: c for (i, c) in enumerate(self.customer_df["customer_id"].unique())
             }
 
             new_customer_ids = range(len(self.customer_df))
@@ -131,6 +132,49 @@ class DataProcessor:
                 self.new_keys_to_old_articles, handle, protocol=pickle.HIGHEST_PROTOCOL,
             )
 
+    def process_meta_data(self):
+        self.customer_ids = self.customer_df["customer_id"].unique()
+        self.article_ids = self.article_df["article_id"].unique()
+        self.customer_count = len(self.customer_ids)
+        self.article_count = len(self.article_ids)
+
+        with open(
+            os.path.join(self.params["p_out_path"], "customer_ids.pickle"), "wb",
+        ) as handle:
+            pickle.dump(
+                self.customer_ids, handle, protocol=pickle.HIGHEST_PROTOCOL,
+            )
+        with open(
+            os.path.join(self.params["p_out_path"], "article_ids.pickle"), "wb",
+        ) as handle:
+            pickle.dump(
+                self.article_ids, handle, protocol=pickle.HIGHEST_PROTOCOL,
+            )
+        with open(
+            os.path.join(self.params["p_out_path"], "customer_count.pickle"), "wb",
+        ) as handle:
+            pickle.dump(
+                self.customer_count, handle, protocol=pickle.HIGHEST_PROTOCOL,
+            )
+        with open(
+            os.path.join(self.params["p_out_path"], "article_count.pickle"), "wb",
+        ) as handle:
+            pickle.dump(
+                self.article_count, handle, protocol=pickle.HIGHEST_PROTOCOL,
+            )
+        with open(
+            os.path.join(self.params["p_out_path"], "train_customer_ids.pickle"), "wb",
+        ) as handle:
+            pickle.dump(
+                self.train_customer_ids, handle, protocol=pickle.HIGHEST_PROTOCOL,
+            )
+        with open(
+            os.path.join(self.params["p_out_path"], "test_customer_ids.pickle"), "wb",
+        ) as handle:
+            pickle.dump(
+                self.test_customer_ids, handle, protocol=pickle.HIGHEST_PROTOCOL,
+            )
+
     def process_transaction_df(self):
         print("generating transaction data")
         with open(os.path.join(self.params["og_path"], "transactions_train.csv")) as f:
@@ -183,8 +227,27 @@ class DataProcessor:
         self.last_day = max(self.transaction_df["t_dat"])
         self.train_threshold = self.last_day - pd.Timedelta(days=7)
 
+        self.train_df = self.transaction_df[
+            self.transaction_df["t_dat"] < self.train_threshold
+        ]
+
+        self.train_customer_ids = self.train_df["customer_id"].unique()
+        with open(
+            os.path.join(self.params["p_out_path"], "train_df.pickle"), "wb"
+        ) as handle:
+            pickle.dump(self.train_df, handle, protocol=pickle.HIGHEST_PROTOCOL)
+
+        self.test_df = self.transaction_df[
+            self.transaction_df["t_dat"] >= self.train_threshold
+        ]
+        self.test_customer_ids = self.test_df["customer_id"].unique()
+        with open(
+            os.path.join(self.params["p_out_path"], "test_df.pickle"), "wb"
+        ) as handle:
+            pickle.dump(self.test_df, handle, protocol=pickle.HIGHEST_PROTOCOL)
+
     def find_test_info(self):
-        if params["ds"] == "full":
+        if self.params["ds"] == "full":
             self.process_transaction_df()
             self.process_article_df()
             self.process_transaction_df()
@@ -245,18 +308,18 @@ class DataProcessor:
         ) as handle:
             pickle.dump(self.S_test, handle, protocol=pickle.HIGHEST_PROTOCOL)
 
-    def get_test_gts(self):
-        self.test_gts = []
+    def process_test_gt(self):
+        self.test_gt = []
         for customer_id in self.test_customer_ids:
             gt = self.test_df[self.test_df["customer_id"] == customer_id][
                 "article_id"
             ].values
-            self.test_gts.append(gt)
+            self.test_gt.append(gt)
 
         with open(
             os.path.join(self.params["p_out_path"], "test_gts.pickle"), "wb",
         ) as handle:
-            pickle.dump(self.test_gts, handle, protocol=pickle.HIGHEST_PROTOCOL)
+            pickle.dump(self.test_gt, handle, protocol=pickle.HIGHEST_PROTOCOL)
 
 
 if __name__ == "__main__":
