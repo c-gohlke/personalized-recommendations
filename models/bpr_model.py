@@ -35,7 +35,6 @@ class NN_Model(torch.nn.Module):
         self.embed_article = torch.nn.Embedding(
             article_count, factor_num, device=self.device
         )
-        self.article_count = article_count
 
         torch.nn.init.normal_(self.embed_customer.weight, std=0.01)
         torch.nn.init.normal_(self.embed_article.weight, std=0.01)
@@ -107,8 +106,12 @@ class BPR_Model:
         return self.loss_function(pred_i, gt_i) + self.loss_function(pred_j, gt_j)
 
     def recommend_BPR(self, customer_ids):
-        item_i = torch.tensor(range(self.article_count)).to(self.device).reshape(-1)
-        e_item = self.embed_article(item_i)
+        item_i = (
+            torch.tensor(range(self.dataloader.article_count))
+            .to(self.device)
+            .reshape(-1)
+        )
+        e_item = self.net.embed_article(item_i)
 
         recommendations = np.empty((len(customer_ids), self.params["predict_amount"]))
         if self.device.type == "cuda":
@@ -122,7 +125,7 @@ class BPR_Model:
             batch = customer_ids[start_i:end_i]
             cid = torch.tensor(batch).to(self.device).reshape(-1)
 
-            e_customer = self.embed_customer(cid)
+            e_customer = self.net.embed_customer(cid)
             score = torch.matmul(e_customer, e_item.t())
             _, indices = torch.topk(score, self.params["predict_amount"])
             b_rec = torch.take(item_i, indices).cpu().numpy()
@@ -133,9 +136,6 @@ class BPR_Model:
     def train(self):
         train_history = []
         test_history = []
-
-        evaluate_per_epoch = 5
-        dataloader_per_epoch = 10
 
         print("getting train_loader")
         train_loader = self.dataloader.get_new_loader(
@@ -178,17 +178,17 @@ class BPR_Model:
             )
 
             train_history.append(total_loss / len(train_loader))
-            if epoch % dataloader_per_epoch == 0:
+            if epoch % self.params["dataloader_per_epoch"] == 0:
                 print("building new dataloader")
                 train_loader = self.dataloader.get_new_loader(
                     batch_size=self.params["batch_size"]
                 )
                 print("dataloader built")
 
-            if epoch % evaluate_per_epoch == 0:
+            if epoch % self.params["evaluate_per_epoch"] == 0:
                 self.net.eval()
                 with torch.no_grad():
-                    test_score = self.net.evaluate_BPR(
+                    test_score = self.evaluate_BPR(
                         self.dataloader.test_customer_ids, self.dataloader.test_gt
                     )
 

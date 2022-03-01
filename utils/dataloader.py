@@ -3,6 +3,7 @@ import numpy as np
 import torch
 import pickle
 from utils.dataset import Dataset
+import pandas as pd
 
 
 class DataLoader:
@@ -12,6 +13,7 @@ class DataLoader:
         self.load_test_df()
         self.get_test_gt()
         self.load_meta_data()
+        self.load_train_df()
 
     # def load_customer_df(self):
     #     print("customer data fast load")
@@ -23,10 +25,19 @@ class DataLoader:
     #     with open(os.path.join(self.data_path, "article_df.pickle"), "rb") as handle:
     #         self.article_df = pickle.load(handle)
 
-    # def load_train_df(self):
-    #     print("transaction data fast load")
-    #     with open(os.path.join(self.data_path, "train_df.pickle"), "rb") as handle:
-    #         self.train_df = pickle.load(handle)
+    def load_train_df(self):
+        print("transaction data fast load")
+        with open(os.path.join(self.data_path, "train_df.pickle"), "rb") as handle:
+            self.train_df = pickle.load(handle)
+
+        # train_group = train_df.groupby("customer_id", as_index=False)
+        train_group_customer = self.train_df.groupby("customer_id")
+        # TODO check what is faster
+
+        train_group_customer_i = train_group_customer.apply(lambda x: x.index)
+        self.train_customer_articles = train_group_customer_i.apply(
+            lambda x: self.train_df.loc[x]["article_id"].values
+        )
 
     def load_test_df(self):
         print("transaction data fast load")
@@ -80,22 +91,26 @@ class DataLoader:
         X = np.empty((len(self.train_customer_ids), 3))
 
         X[:, 0] = self.train_customer_ids
-        for i in range(len(self.train_customer_ids)):
-            cid = self.train_customer_ids[i]
-            rated_items = self.S_train[cid, :].nonzero()[1]
 
-            X[i, 1] = np.random.choice(rated_items, 1).item()
-            while True:
-                rand_item = np.random.randint(0, self.S_train.shape[1])
-                if rand_item not in rated_items:
-                    X[i, 2] = rand_item
-                    break
+        ones = self.train_customer_articles.apply(lambda x: np.random.choice(x))
+        X[:, 1] = ones
+
+        zeros = np.random.randint(self.article_count, size=len(self.train_customer_ids))
+        drawn_index = range(len(zeros))
+        check_vals = pd.Series(drawn_index)
+        redraw_bool = check_vals.apply(
+            lambda x: zeros[x] in self.train_customer_articles.values[x]
+        )
+        redraw_index = redraw_bool[redraw_bool].index
+        while len(redraw_index) > 0:
+            zeros[redraw_index] = np.random.randint(
+                self.article_count, size=len(redraw_index)
+            )
+            check_vals = pd.Series(redraw_index)
+            redraw_bool = check_vals.apply(
+                lambda x: zeros[x] in self.train_customer_articles.values[x]
+            )
+            redraw_index = redraw_bool[redraw_bool].index
+        X[:, 2] = zeros
+
         return X
-
-
-#%%
-if __name__ == "__main__":
-    # from params import OG_DATA_PATH, PROCESSED_DATA_PATH, PROCESSED_DATA_OUT_PATH
-
-    dataprocessor = DataLoader()
-    #%%

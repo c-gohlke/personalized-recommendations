@@ -6,10 +6,8 @@ import numpy as np
 from utils.dataprocessor import DataProcessor
 from utils.dataset import Dataset
 from utils.map_score import map_score
-from utils.get_test_gt import get_test_gt
 
-from params import PREDICT_AMOUNT
-
+# TODO
 
 def get_most_popular(df):
     return df["article_id"].value_counts()[:PREDICT_AMOUNT].keys()
