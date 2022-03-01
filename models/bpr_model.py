@@ -137,6 +137,7 @@ class BPR_Model:
         evaluate_per_epoch = 5
         dataloader_per_epoch = 10
 
+        print("getting train_loader")
         train_loader = self.dataloader.get_new_loader(
             batch_size=self.params["batch_size"]
         )
@@ -188,7 +189,7 @@ class BPR_Model:
                 self.net.eval()
                 with torch.no_grad():
                     test_score = self.net.evaluate_BPR(
-                        self.dataloader.test_customer_ids, self.dataloader.test_gts
+                        self.dataloader.test_customer_ids, self.dataloader.test_gt
                     )
 
                     test_history.append(test_score)

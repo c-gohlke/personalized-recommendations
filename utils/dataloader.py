@@ -9,35 +9,24 @@ class DataLoader:
     def __init__(self, data_path):
         self.data_path = data_path
         self.load_S_train()
+        self.load_test_df()
         self.get_test_gt()
         self.load_meta_data()
 
-    def load_customer_df(self):
-        print("customer data fast load")
-        with open(os.path.join(self.data_path, "customer_df.pickle"), "rb") as handle:
-            self.customer_df = pickle.load(handle)
+    # def load_customer_df(self):
+    #     print("customer data fast load")
+    #     with open(os.path.join(self.data_path, "customer_df.pickle"), "rb") as handle:
+    #         self.customer_df = pickle.load(handle)
 
-    def load_article_df(self):
-        print("article data fast load")
-        with open(os.path.join(self.data_path, "article_df.pickle"), "rb") as handle:
-            self.article_df = pickle.load(handle)
+    # def load_article_df(self):
+    #     print("article data fast load")
+    #     with open(os.path.join(self.data_path, "article_df.pickle"), "rb") as handle:
+    #         self.article_df = pickle.load(handle)
 
-    def load_train_test(self):
-        with open(os.path.join(self.data_path, "train_df.pickle"), "rb") as handle:
-            self.train_df = pickle.load(handle)
-
-        with open(os.path.join(self.data_path, "test_df.pickle"), "rb") as handle:
-            self.test_df = pickle.load(handle)
-
-    def get_test_df(self):
-        self.test_df = self.transaction_df[
-            self.transaction_df["t_dat"] >= self.train_threshold
-        ]
-
-    def load_train_df(self):
-        print("transaction data fast load")
-        with open(os.path.join(self.data_path, "train_df.pickle"), "rb") as handle:
-            self.train_df = pickle.load(handle)
+    # def load_train_df(self):
+    #     print("transaction data fast load")
+    #     with open(os.path.join(self.data_path, "train_df.pickle"), "rb") as handle:
+    #         self.train_df = pickle.load(handle)
 
     def load_test_df(self):
         print("transaction data fast load")
@@ -45,12 +34,10 @@ class DataLoader:
             self.test_df = pickle.load(handle)
 
     def load_meta_data(self):
-        print("calculating customer and article counts")
-
-        with open(os.path.join(self.data_path, "customer_ids.pickle"), "rb") as handle:
-            self.customer_ids = pickle.load(handle)
-        with open(os.path.join(self.data_path, "article_ids.pickle"), "rb") as handle:
-            self.article_ids = pickle.load(handle)
+        # with open(os.path.join(self.data_path, "customer_ids.pickle"), "rb") as handle:
+        #     self.customer_ids = pickle.load(handle)
+        # with open(os.path.join(self.data_path, "article_ids.pickle"), "rb") as handle:
+        #     self.article_ids = pickle.load(handle)
         with open(
             os.path.join(self.data_path, "customer_count.pickle"), "rb"
         ) as handle:
@@ -71,15 +58,15 @@ class DataLoader:
         with open(os.path.join(self.data_path, "S_train.pickle"), "rb") as handle:
             self.S_train = pickle.load(handle)
 
-    def load_S_test(self):
-        print("S_test fast load")
-        with open(os.path.join(self.data_path, "S_test.pickle"), "rb") as handle:
-            self.S_test = pickle.load(handle)
+    # def load_S_test(self):
+    #     print("S_test fast load")
+    #     with open(os.path.join(self.data_path, "S_test.pickle"), "rb") as handle:
+    #         self.S_test = pickle.load(handle)
 
     def get_test_gt(self):
         print("get_test_gt fast load")
         with open(os.path.join(self.data_path, "test_gt.pickle"), "rb") as handle:
-            self.test_gts = pickle.load(handle)
+            self.test_gt = pickle.load(handle)
 
     def get_new_loader(self, batch_size):
         train_data = self.sample_train()
