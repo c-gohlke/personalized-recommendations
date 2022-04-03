@@ -4,6 +4,7 @@ import torch
 import pickle
 from utils.dataset import Dataset
 import pandas as pd
+import random
 
 
 class DataLoader:
@@ -11,7 +12,6 @@ class DataLoader:
         self.data_path = data_path
         self.load_S_train()
         self.load_test_df()
-        self.get_test_gt()
         self.load_meta_data()
         self.load_train_df()
 
@@ -26,23 +26,23 @@ class DataLoader:
     #         self.article_df = pickle.load(handle)
 
     def load_train_df(self):
-        print("transaction data fast load")
+        print("load train data")
         with open(os.path.join(self.data_path, "train_df.pickle"), "rb") as handle:
             self.train_df = pickle.load(handle)
 
-        # train_group = train_df.groupby("customer_id", as_index=False)
-        train_group_customer = self.train_df.groupby("customer_id")
-        # TODO check what is faster
-
-        train_group_customer_i = train_group_customer.apply(lambda x: x.index)
-        self.train_customer_articles = train_group_customer_i.apply(
-            lambda x: self.train_df.loc[x]["article_id"].values
-        )
+        with open(
+            os.path.join(self.data_path, "train_customer_articles.pickle"), "rb"
+        ) as handle:
+            self.train_customer_articles = pickle.load(handle)
 
     def load_test_df(self):
         print("transaction data fast load")
         with open(os.path.join(self.data_path, "test_df.pickle"), "rb") as handle:
             self.test_df = pickle.load(handle)
+        with open(
+            os.path.join(self.data_path, "test_customer_articles.pickle"), "rb"
+        ) as handle:
+            self.test_customer_articles = pickle.load(handle)
 
     def load_meta_data(self):
         # with open(os.path.join(self.data_path, "customer_ids.pickle"), "rb") as handle:
@@ -73,11 +73,6 @@ class DataLoader:
     #     print("S_test fast load")
     #     with open(os.path.join(self.data_path, "S_test.pickle"), "rb") as handle:
     #         self.S_test = pickle.load(handle)
-
-    def get_test_gt(self):
-        print("get_test_gt fast load")
-        with open(os.path.join(self.data_path, "test_gt.pickle"), "rb") as handle:
-            self.test_gt = pickle.load(handle)
 
     def get_new_loader(self, batch_size):
         train_data = self.sample_train()
@@ -114,3 +109,9 @@ class DataLoader:
         X[:, 2] = zeros
 
         return X
+
+
+if __name__ == "__main__":
+    from params import params
+
+    dataloader = DataLoader(params["data_path"])

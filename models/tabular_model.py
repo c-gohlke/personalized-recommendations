@@ -9,6 +9,7 @@ from utils.map_score import map_score
 
 # TODO
 
+
 def get_most_popular(df):
     return df["article_id"].value_counts()[:PREDICT_AMOUNT].keys()
 
@@ -28,7 +29,7 @@ def find_last_purchase(customer_ids, train_df):
         c_df = train_df[train_df["customer_id"] == cid]
         c_df = c_df.sort_values(by="t_dat", ascending=True)
         print(c_df)
-        sys.exit()
+        sys.exit("Not implemented find_last_purchase")
 
 
 def predict_similar(customer_ids, last_purchase):

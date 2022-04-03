@@ -1,7 +1,6 @@
 import os
 import pandas as pd
 import numpy as np
-import torch
 import pickle
 from scipy import sparse
 from params import BASE_PATH, OG_DATA_NAME
@@ -77,6 +76,8 @@ class DataProcessor:
             )
             print("processing S train")
             self.process_S_train(train_df, customer_count, article_count, p_out_path)
+            print("processing train gt")
+            self.process_train_gt(train_df, train_customer_ids, p_out_path)
             print("processing test gt")
             self.process_test_gt(test_df, test_customer_ids, p_out_path)
             return test_customer_ids, test_article_ids
@@ -173,18 +174,41 @@ class DataProcessor:
         train_threshold = last_day - pd.Timedelta(days=7)
 
         train_df = transaction_df[transaction_df["t_dat"] < train_threshold]
-        train_customer_ids = train_df["customer_id"].unique()
-        train_article_ids = train_df["article_id"].unique()
+        test_df = transaction_df[transaction_df["t_dat"] >= train_threshold]
 
-        # train_customer_ids = train_df["customer_id"].unique()
         with open(os.path.join(p_out_path, "train_df.pickle"), "wb") as handle:
             pickle.dump(train_df, handle, protocol=pickle.HIGHEST_PROTOCOL)
-
-        test_df = transaction_df[transaction_df["t_dat"] >= train_threshold]
-        test_customer_ids = test_df["customer_id"].unique()
-        test_article_ids = test_df["article_id"].unique()
         with open(os.path.join(p_out_path, "test_df.pickle"), "wb") as handle:
             pickle.dump(test_df, handle, protocol=pickle.HIGHEST_PROTOCOL)
+
+        train_customer_ids = train_df["customer_id"].unique()
+        train_article_ids = train_df["article_id"].unique()
+        train_group_customer = train_df.groupby("customer_id")
+        train_group_customer_indexes = train_group_customer.apply(lambda x: x.index)
+        train_customer_articles = train_group_customer_indexes.apply(
+            lambda x: train_df.loc[x]["article_id"].values
+        )
+        with open(
+            os.path.join(p_out_path, "train_customer_articles.pickle"), "wb"
+        ) as handle:
+            pickle.dump(
+                train_customer_articles, handle, protocol=pickle.HIGHEST_PROTOCOL
+            )
+
+        test_customer_ids = test_df["customer_id"].unique()
+        test_article_ids = test_df["article_id"].unique()
+        test_group_customer = test_df.groupby("customer_id")
+        test_group_customer_indexes = test_group_customer.apply(lambda x: x.index)
+        test_customer_articles = test_group_customer_indexes.apply(
+            lambda x: test_df.loc[x]["article_id"].values
+        )
+        with open(
+            os.path.join(p_out_path, "test_customer_articles.pickle"), "wb"
+        ) as handle:
+            pickle.dump(
+                test_customer_articles, handle, protocol=pickle.HIGHEST_PROTOCOL
+            )
+
         return (
             train_df,
             test_df,
@@ -242,15 +266,6 @@ class DataProcessor:
 
         with open(os.path.join(p_out, "S_train.pickle"), "wb",) as handle:
             pickle.dump(S_train, handle, protocol=pickle.HIGHEST_PROTOCOL)
-
-    def process_test_gt(self, test_df, test_customer_ids, p_out):
-        test_gt = []
-        for customer_id in test_customer_ids:
-            gt = test_df[test_df["customer_id"] == customer_id]["article_id"].values
-            test_gt.append(gt)
-
-        with open(os.path.join(p_out, "test_gt.pickle"), "wb",) as handle:
-            pickle.dump(test_gt, handle, protocol=pickle.HIGHEST_PROTOCOL)
 
 
 if __name__ == "__main__":

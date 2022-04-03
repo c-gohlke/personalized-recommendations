@@ -1,4 +1,4 @@
-def map_score(pred, gt, k):
+def evaluate_map_score(pred, gt, k):
     total_score = 0
     for u in range(len(pred)):
         score = 0.0
